@@ -10,9 +10,6 @@ repositories {
 }
 
 dependencies {
-    testImplementation platform('org.junit:junit-bom:5.10.0')
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-
     testImplementation group: 'com.console.citrus', name:'citrus-base', version:'3.4.0'
     testImplementation group: 'com.console.citrus', name:'citrus-testing', version:'3.4.0'
     testImplementation group: 'com.console.citrus', name:'citrus-spring', version:'3.4.0'
@@ -26,5 +23,9 @@ dependencies {
     }
 
 test {
-    useJUnitPlatform()
+    useTestNG() {
+        parallel="classes"
+        threadCount 3
+        useDefaultListeners = true
+    }
 }
