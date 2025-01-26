@@ -11,7 +11,7 @@ repositories {
 
 dependencies {
     testImplementation group: 'com.consol.citrus', name:'citrus-base', version:'3.4.0'
-    testImplementation group: 'com.consol.citrus', name:'citrus-testing', version:'3.4.0'
+    testImplementation group: 'com.consol.citrus', name:'citrus-testng', version:'3.4.0'
     testImplementation group: 'com.consol.citrus', name:'citrus-spring', version:'3.4.0'
     testImplementation group: 'com.consol.citrus', name:'citrus-http', version:'3.4.0'
     testImplementation group: 'com.consol.citrus', name:'citrus-validation-json', version:'3.4.0'
@@ -23,9 +23,10 @@ dependencies {
     }
 
 test {
-    useTestNG() {
-        parallel="classes"
-        threadCount 3
-        useDefaultListeners = true
+    useTestNG()
+
+    testLogging {
+        events "PASSED", "FAILED", "SKIPPED"
+        showStandardStreams = true
     }
 }
