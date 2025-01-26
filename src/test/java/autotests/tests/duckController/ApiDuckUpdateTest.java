@@ -17,6 +17,8 @@ public class ApiDuckUpdateTest extends DuckActionsClient {
         getNewDuckId(runner);
         duckUpdate(runner, "${duckId}", "red", 2, "rubber", "quack");
         validateResponse(runner, HttpStatus.OK, "{\n" + "  \"message\": \"Duck with id = ${duckId} is updated\"\n" + "}");
+        duckProperties(runner, "${duckId}");
+        checkAllProperties(runner, "red", 2, "rubber", "quack", "ACTIVE");
     }
 
     @Test(description = "Проверка изменения цвета и звука утки")
@@ -26,5 +28,7 @@ public class ApiDuckUpdateTest extends DuckActionsClient {
         getNewDuckId(runner);
         duckUpdate(runner, "${duckId}", "green", 0.15, "rubber", "woof");
         validateResponse(runner, HttpStatus.OK, "{\n" + "  \"message\": \"Duck with id = ${duckId} is updated\"\n" + "}");
+        duckProperties(runner, "${duckId}");
+        checkAllProperties(runner, "green", 0.15, "rubber", "woof", "ACTIVE");
     }
 }

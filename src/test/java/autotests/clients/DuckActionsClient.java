@@ -69,9 +69,9 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
                 http()
                         .client(yellowDuckService)
                         .receive()
-                        .response(HttpStatus.OK )
+                        .response(HttpStatus.OK)
                         .message()
-                        .type(MessageType.JSON )
+                        .type(MessageType.JSON)
                         .validate(body));
     }
 
@@ -92,33 +92,27 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
     public void createDuckWithEvenId(TestCaseRunner runner, String color, double height, String material, String sound, String wingsState) {
         AtomicReference<Integer> id = new AtomicReference<>(0);
 
-        createDuck(runner, color, height, material, sound, wingsState);
-        getNewDuckId(runner);
-
-        runner.$(action ->
-        {id.set(Integer.parseInt(action.getVariable("duckId")));
-        });
-
-        if (id.get()%2!=0) {
+        do {
             createDuck(runner, color, height, material, sound, wingsState);
             getNewDuckId(runner);
-        }
+            runner.$(action ->
+            {
+                id.set(Integer.parseInt(action.getVariable("duckId")));
+            });
+        } while (id.get() % 2 != 0);
     }
 
     public void createDuckWithOddId(TestCaseRunner runner, String color, double height, String material, String sound, String wingsState) {
         AtomicReference<Integer> id = new AtomicReference<>(0);
 
-        createDuck(runner, color, height, material, sound, wingsState);
-        getNewDuckId(runner);
-
-        runner.$(action ->
-        {id.set(Integer.parseInt(action.getVariable("duckId")));
-        });
-
-        if (id.get()%2==0) {
+        do {
             createDuck(runner, color, height, material, sound, wingsState);
             getNewDuckId(runner);
-        }
+            runner.$(action ->
+            {
+                id.set(Integer.parseInt(action.getVariable("duckId")));
+            });
+        } while (id.get() % 2 == 0);
     }
 
     public void duckDelete(TestCaseRunner runner, String id) {
@@ -126,6 +120,12 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
                 .send()
                 .delete("/api/duck/delete")
                 .queryParam("id", id));
+    }
+
+    public void duckGetAllIds(TestCaseRunner runner) {
+        runner.$(http().client(yellowDuckService)
+                .send()
+                .get("/api/duck/getAllIds"));
     }
 
     public void duckUpdate(TestCaseRunner runner, String id, String color, double height, String material, String sound) {
@@ -141,10 +141,10 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
 
     public void getNewDuckId(TestCaseRunner runner) {
         runner.$(http().client(yellowDuckService)
-                        .receive()
-                        .response(HttpStatus.OK)
-                        .message()
-                        .extract(fromBody().expression("$.id", "duckId")));
+                .receive()
+                .response(HttpStatus.OK)
+                .message()
+                .extract(fromBody().expression("$.id", "duckId")));
     }
 
     public void checkMaterial(TestCaseRunner runner, String material) {
@@ -152,5 +152,25 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
                 runner,
                 jsonPath().expression("$.material", material)
         );
+    }
+
+    public void checkAllProperties(TestCaseRunner runner, String color, double height, String material, String sound, String wingsState) {
+        validateResponseJsonPath(
+                runner,
+                jsonPath()
+                        .expression("$.color", color)
+                        .expression("$.height", height)
+                        .expression("$.material", material)
+                        .expression("$.sound", sound)
+                        .expression("$.wingsState", wingsState)
+        );
+    }
+
+    public void getIds(TestCaseRunner runner) {
+        runner.$(http().client(yellowDuckService)
+                .receive()
+                .response(HttpStatus.OK)
+                .message()
+                .extract(fromBody().expression("$.[*]", "allDucksIds")));
     }
 }

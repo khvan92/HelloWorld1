@@ -4,9 +4,12 @@ import autotests.clients.DuckActionsClient;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.annotations.CitrusTest;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
 import org.springframework.http.HttpStatus;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Test;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ApiDuckDeleteTest extends DuckActionsClient {
 
@@ -17,5 +20,22 @@ public class ApiDuckDeleteTest extends DuckActionsClient {
         getNewDuckId(runner);
         duckDelete(runner, "${duckId}");
         validateResponse(runner, HttpStatus.OK, "{\n" + "  \"message\": \"Duck is deleted\"\n" + "}");
+        duckGetAllIds(runner);
+        checkDeletedId(runner);
+    }
+
+    public void checkDeletedId(TestCaseRunner runner) {
+        AtomicReference<Integer> id = new AtomicReference<>(0);
+        AtomicReference<String> allIds = new AtomicReference<String>();
+        getIds(runner);
+        runner.$(action ->
+        {
+            id.set(Integer.parseInt(action.getVariable("duckId")));
+            allIds.set(action.getVariable("allDucksIds"));
+
+            if(allIds.get().contains(id.get().toString())) {
+                action.addException(new CitrusRuntimeException("Уточка не удалена"));
+            }
+        });
     }
 }
