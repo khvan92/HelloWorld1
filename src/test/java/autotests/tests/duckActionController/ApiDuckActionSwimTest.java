@@ -1,41 +1,34 @@
 package autotests.tests.duckActionController;
 
 import autotests.clients.DuckActionsClient;
+import autotests.payloads.Duck;
+import autotests.payloads.WingState;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.annotations.CitrusTest;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Test;
-
-import static com.consol.citrus.http.actions.HttpActionBuilder.http;
 
 public class ApiDuckActionSwimTest extends DuckActionsClient {
 
     @Test(description = "Проверка action swim утки с существующим id")
     @CitrusTest
     public void successfulSwimWithRightId(@Optional @CitrusResource TestCaseRunner runner) {
-        createDuck(runner, "yellow", 0.15, "rubber", "quack", "ACTIVE");
+        Duck duckRubber = new Duck().color("yellow").height(0.15).material("rubber").sound("quack").wingsState(WingState.ACTIVE);
+        createDuck(runner, duckRubber);
         getNewDuckId(runner);
         duckSwim(runner, "${duckId}");
-        validateResponse(runner, HttpStatus.OK, "{\n" + "  \"message\": \"I'm swimming\"\n" + "}");
+        validateResponseFromResources(runner, HttpStatus.OK,"duckActionsTest/successfulSwim.json");
     }
 
     @Test(description = "Проверка action swim утки с несуществующим id")
     @CitrusTest
     public void successfulSwimWithWrongId(@Optional @CitrusResource TestCaseRunner runner) {
-        createDuck(runner, "yellow", 0.15, "rubber", "quack", "FIXED");
+        Duck duckRubber = new Duck().color("yellow").height(0.15).material("rubber").sound("quack").wingsState(WingState.FIXED);
+        createDuck(runner, duckRubber);
         validateResponse(runner, HttpStatus.OK);
         duckSwim(runner, "0");
-        validateResponse(runner, HttpStatus.NOT_FOUND, "{\n" + "  \"message\": \"Paws are not found ((((\"\n" + "}");
-    }
-
-    public void validateResponse(TestCaseRunner runner, HttpStatus status) {
-        runner.$(http().client(yellowDuckService)
-                .receive()
-                .response(status)
-                .message()
-                .contentType(MediaType.APPLICATION_JSON_VALUE));
+        validateResponseFromResources(runner, HttpStatus.NOT_FOUND, "duckActionsTest/pawsNotFound.json");
     }
 }

@@ -1,12 +1,18 @@
 package autotests.clients;
 
 import autotests.EndpointConfig;
+import autotests.payloads.Duck;
+import autotests.payloads.WingState;
 import com.consol.citrus.TestCaseRunner;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.http.client.HttpClient;
 import com.consol.citrus.message.MessageType;
+import com.consol.citrus.message.builder.ObjectMappingPayloadBuilder;
 import com.consol.citrus.testng.spring.TestNGCitrusSpringSupport;
 import com.consol.citrus.validation.json.JsonPathMessageValidationContext;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
@@ -63,6 +69,34 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
         );
     }
 
+    public void validateResponse(TestCaseRunner runner, HttpStatus status, Object body) {
+        runner.$(http().client(yellowDuckService)
+                .receive()
+                .response(status)
+                .message()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(new ObjectMappingPayloadBuilder(body, new ObjectMapper()))
+        );
+    }
+
+    public void validateResponse(TestCaseRunner runner, HttpStatus status) {
+        runner.$(http().client(yellowDuckService)
+                .receive()
+                .response(status)
+                .message()
+                .contentType(MediaType.APPLICATION_JSON_VALUE));
+    }
+
+    public void validateResponseFromResources(TestCaseRunner runner, HttpStatus status, String pathToResource) {
+        runner.$(http().client(yellowDuckService)
+                .receive()
+                .response(status)
+                .message()
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .body(new ClassPathResource(pathToResource))
+        );
+    }
+
     public void validateResponseJsonPath(TestCaseRunner runner,
                                          JsonPathMessageValidationContext.Builder body) {
         runner.$(
@@ -75,25 +109,21 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
                         .validate(body));
     }
 
-    public void createDuck(TestCaseRunner runner, String color, double height, String material, String sound, String wingsState) {
+    public void createDuck(TestCaseRunner runner, Object body) {
         runner.$(http().client(yellowDuckService)
                 .send()
                 .post("/api/duck/create")
                 .message()
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body("{\n" + "  \"color\": \"" + color + "\",\n"
-                        + "  \"height\": " + height + ",\n"
-                        + "  \"material\": \"" + material + "\",\n"
-                        + "  \"sound\": \"" + sound + "\",\n"
-                        + "  \"wingsState\": \"" + wingsState
-                        + "\"\n" + "}"));
+                .body(new ObjectMappingPayloadBuilder(body, new ObjectMapper())));
     }
 
-    public void createDuckWithEvenId(TestCaseRunner runner, String color, double height, String material, String sound, String wingsState) {
+    public void createDuckWithEvenId(TestCaseRunner runner, String color, double height, String material, String sound, WingState wingsState) {
         AtomicReference<Integer> id = new AtomicReference<>(0);
+        Duck duck = new Duck().color(color).height(height).material(material).sound(sound).wingsState(wingsState);
 
         do {
-            createDuck(runner, color, height, material, sound, wingsState);
+            createDuck(runner, duck);
             getNewDuckId(runner);
             runner.$(action ->
             {
@@ -102,11 +132,12 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
         } while (id.get() % 2 != 0);
     }
 
-    public void createDuckWithOddId(TestCaseRunner runner, String color, double height, String material, String sound, String wingsState) {
+    public void createDuckWithOddId(TestCaseRunner runner, String color, double height, String material, String sound, WingState wingsState) {
         AtomicReference<Integer> id = new AtomicReference<>(0);
+        Duck duck = new Duck().color(color).height(height).material(material).sound(sound).wingsState(wingsState);
 
         do {
-            createDuck(runner, color, height, material, sound, wingsState);
+            createDuck(runner, duck);
             getNewDuckId(runner);
             runner.$(action ->
             {
@@ -172,5 +203,20 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
                 .response(HttpStatus.OK)
                 .message()
                 .extract(fromBody().expression("$.[*]", "allDucksIds")));
+    }
+
+    public void checkDeletedId(TestCaseRunner runner) {
+        AtomicReference<Integer> id = new AtomicReference<>(0);
+        AtomicReference<String> allIds = new AtomicReference<String>();
+        getIds(runner);
+        runner.$(action ->
+        {
+            id.set(Integer.parseInt(action.getVariable("duckId")));
+            allIds.set(action.getVariable("allDucksIds"));
+
+            if(allIds.get().contains(id.get().toString())) {
+                action.addException(new CitrusRuntimeException("Уточка не удалена"));
+            }
+        });
     }
 }

@@ -1,6 +1,8 @@
 package autotests.tests.duckController;
 
 import autotests.clients.DuckActionsClient;
+import autotests.payloads.Duck;
+import autotests.payloads.WingState;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.annotations.CitrusTest;
@@ -13,7 +15,8 @@ public class ApiDuckUpdateTest extends DuckActionsClient {
     @Test(description = "Проверка изменения цвета и высоты утки")
     @CitrusTest
     public void colorHeightUpdate(@Optional @CitrusResource TestCaseRunner runner) {
-        createDuck(runner, "yellow", 0.15, "rubber", "quack", "ACTIVE");
+        Duck duckRubber = new Duck().color("yellow").height(0.15).material("rubber").sound("quack").wingsState(WingState.ACTIVE);
+        createDuck(runner, duckRubber);
         getNewDuckId(runner);
         duckUpdate(runner, "${duckId}", "red", 2, "rubber", "quack");
         validateResponse(runner, HttpStatus.OK, "{\n" + "  \"message\": \"Duck with id = ${duckId} is updated\"\n" + "}");
@@ -24,7 +27,8 @@ public class ApiDuckUpdateTest extends DuckActionsClient {
     @Test(description = "Проверка изменения цвета и звука утки")
     @CitrusTest
     public void colorSoundUpdate(@Optional @CitrusResource TestCaseRunner runner) {
-        createDuck(runner, "yellow", 0.15, "rubber", "quack", "ACTIVE");
+        Duck duckRubber = new Duck().color("yellow").height(0.15).material("rubber").sound("quack").wingsState(WingState.ACTIVE);
+        createDuck(runner, duckRubber);
         getNewDuckId(runner);
         duckUpdate(runner, "${duckId}", "green", 0.15, "rubber", "woof");
         validateResponse(runner, HttpStatus.OK, "{\n" + "  \"message\": \"Duck with id = ${duckId} is updated\"\n" + "}");
