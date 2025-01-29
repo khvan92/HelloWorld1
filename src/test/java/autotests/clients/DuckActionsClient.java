@@ -4,6 +4,7 @@ import autotests.EndpointConfig;
 import autotests.payloads.Duck;
 import autotests.payloads.WingState;
 import com.consol.citrus.TestCaseRunner;
+import com.consol.citrus.exceptions.CitrusRuntimeException;
 import com.consol.citrus.http.client.HttpClient;
 import com.consol.citrus.message.MessageType;
 import com.consol.citrus.message.builder.ObjectMappingPayloadBuilder;
@@ -76,6 +77,14 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .body(new ObjectMappingPayloadBuilder(body, new ObjectMapper()))
         );
+    }
+
+    public void validateResponse(TestCaseRunner runner, HttpStatus status) {
+        runner.$(http().client(yellowDuckService)
+                .receive()
+                .response(status)
+                .message()
+                .contentType(MediaType.APPLICATION_JSON_VALUE));
     }
 
     public void validateResponseFromResources(TestCaseRunner runner, HttpStatus status, String pathToResource) {
@@ -194,5 +203,20 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
                 .response(HttpStatus.OK)
                 .message()
                 .extract(fromBody().expression("$.[*]", "allDucksIds")));
+    }
+
+    public void checkDeletedId(TestCaseRunner runner) {
+        AtomicReference<Integer> id = new AtomicReference<>(0);
+        AtomicReference<String> allIds = new AtomicReference<String>();
+        getIds(runner);
+        runner.$(action ->
+        {
+            id.set(Integer.parseInt(action.getVariable("duckId")));
+            allIds.set(action.getVariable("allDucksIds"));
+
+            if(allIds.get().contains(id.get().toString())) {
+                action.addException(new CitrusRuntimeException("Уточка не удалена"));
+            }
+        });
     }
 }

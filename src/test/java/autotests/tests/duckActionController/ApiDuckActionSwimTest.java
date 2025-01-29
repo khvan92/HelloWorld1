@@ -7,11 +7,8 @@ import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.annotations.CitrusTest;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Test;
-
-import static com.consol.citrus.http.actions.HttpActionBuilder.http;
 
 public class ApiDuckActionSwimTest extends DuckActionsClient {
 
@@ -33,13 +30,5 @@ public class ApiDuckActionSwimTest extends DuckActionsClient {
         validateResponse(runner, HttpStatus.OK);
         duckSwim(runner, "0");
         validateResponseFromResources(runner, HttpStatus.NOT_FOUND, "duckActionsTest/pawsNotFound.json");
-    }
-
-    public void validateResponse(TestCaseRunner runner, HttpStatus status) {
-        runner.$(http().client(yellowDuckService)
-                .receive()
-                .response(status)
-                .message()
-                .contentType(MediaType.APPLICATION_JSON_VALUE));
     }
 }

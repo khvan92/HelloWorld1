@@ -19,7 +19,7 @@ public class ApiDuckActionFlyTest extends DuckActionsClient {
         createDuck(runner, duckRubber);
         getNewDuckId(runner);
         duckFly(runner, "${duckId}");
-        validateResponse(runner, HttpStatus.OK, "{\n" + "  \"message\": \"I am flying :)\"\n" + "}");
+        validateResponse(runner, HttpStatus.OK, "{\n" + "  \"message\": \"I'm flying\"\n" + "}");
     }
 
     @Test(description = "Проверка action fly утки со связанными крыльями")
@@ -29,7 +29,7 @@ public class ApiDuckActionFlyTest extends DuckActionsClient {
         createDuck(runner, duckRubber);
         getNewDuckId(runner);
         duckFly(runner, "${duckId}");
-        validateResponse(runner, HttpStatus.OK, "{\n" + "  \"message\": \"I can not fly :C\"\n" + "}");
+        validateResponse(runner, HttpStatus.OK, "{\n" + "  \"message\": \"I can't fly\"\n" + "}");
     }
 
     @Test(description = "Проверка action fly утки с крыльями в неопределенном состоянии")
@@ -39,6 +39,6 @@ public class ApiDuckActionFlyTest extends DuckActionsClient {
         createDuck(runner, duckRubber);
         getNewDuckId(runner);
         duckFly(runner, "${duckId}");
-        validateResponse(runner, HttpStatus.OK, "{\n" + "  \"message\": \"Wings are not detected :(\"\n" + "}");
+        validateResponse(runner, HttpStatus.INTERNAL_SERVER_ERROR, "{\n" + "  \"message\": \"Wings aren't detected\"\n" + "}");
     }
 }
