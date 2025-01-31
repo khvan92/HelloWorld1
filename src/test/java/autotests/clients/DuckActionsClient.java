@@ -1,23 +1,15 @@
 package autotests.clients;
 
-import autotests.EndpointConfig;
+import autotests.BaseTest;
 import autotests.payloads.Duck;
 import autotests.payloads.WingState;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.exceptions.CitrusRuntimeException;
-import com.consol.citrus.http.client.HttpClient;
-import com.consol.citrus.message.MessageType;
-import com.consol.citrus.message.builder.ObjectMappingPayloadBuilder;
-import com.consol.citrus.testng.spring.TestNGCitrusSpringSupport;
 import com.consol.citrus.validation.json.JsonPathMessageValidationContext;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.qameta.allure.Step;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -28,11 +20,7 @@ import static com.consol.citrus.dsl.MessageSupport.MessageBodySupport.fromBody;
 import static com.consol.citrus.http.actions.HttpActionBuilder.http;
 import static com.consol.citrus.validation.json.JsonPathMessageValidationContext.Builder.jsonPath;
 
-@ContextConfiguration(classes = {EndpointConfig.class})
-public class DuckActionsClient extends TestNGCitrusSpringSupport {
-
-    @Autowired
-    protected HttpClient yellowDuckService;
+public class DuckActionsClient extends BaseTest {
 
     @Autowired
     protected SingleConnectionDataSource testDb;
@@ -104,101 +92,55 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
 
     @Step("Эндпоинт для метода Swim")
     public void duckSwim(TestCaseRunner runner, String id) {
-        runner.$(http().client(yellowDuckService)
-                .send()
-                .get("/api/duck/action/swim")
-                .queryParam("id", id));
+        sendGetRequest(runner, yellowDuckService, "/api/duck/action/swim?id=" + id);
     }
 
     @Step("Эндпоинт для метода Fly")
     public void duckFly(TestCaseRunner runner, String id) {
-        runner.$(http().client(yellowDuckService)
-                .send()
-                .get("/api/duck/action/fly")
-                .queryParam("id", id));
+        sendGetRequest(runner, yellowDuckService, "/api/duck/action/fly?id=" + id);
     }
 
     @Step("Эндпоинт для метода Properties")
     public void duckProperties(TestCaseRunner runner, String id) {
-        runner.$(http().client(yellowDuckService)
-                .send()
-                .get("/api/duck/action/properties")
-                .queryParam("id", id));
+        sendGetRequest(runner, yellowDuckService, "/api/duck/action/properties?id=" + id);
     }
 
     @Step("Эндпоинт для метода Quack")
     public void duckQuack(TestCaseRunner runner, String id, int repetitionCount, int soundCount) {
-        runner.$(http().client(yellowDuckService)
-                .send()
-                .get("/api/duck/action/quack")
-                .queryParam("id", id)
-                .queryParam("repetitionCount", String.valueOf(repetitionCount))
-                .queryParam("soundCount", String.valueOf(soundCount)));
+        sendGetRequest(runner, yellowDuckService,
+                "/api/duck/action/quack?id=" + id + "&repetitionCount=" + repetitionCount +
+                        "&soundCount=" + soundCount);
     }
 
     @Step("Эндпоинт для валидации ответа от сервера")
     public void validateResponse(TestCaseRunner runner, HttpStatus status, String responseMessage) {
-        runner.$(http().client(yellowDuckService)
-                .receive()
-                .response(status)
-                .message()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(responseMessage)
-        );
+        validationResponseMessage(runner, yellowDuckService, status, responseMessage);
     }
 
     @Step("Эндпоинт для валидации ответа от сервера")
     public void validateResponse(TestCaseRunner runner, HttpStatus status, Object body) {
-        runner.$(http().client(yellowDuckService)
-                .receive()
-                .response(status)
-                .message()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(new ObjectMappingPayloadBuilder(body, new ObjectMapper()))
-        );
+        validationResponseFromPayload(runner, yellowDuckService, status, body);
     }
 
     @Step("Эндпоинт для валидации ответа от сервера")
     public void validateResponse(TestCaseRunner runner, HttpStatus status) {
-        runner.$(http().client(yellowDuckService)
-                .receive()
-                .response(status)
-                .message()
-                .contentType(MediaType.APPLICATION_JSON_VALUE));
+        validationResponseStatus(runner, yellowDuckService, status);
     }
 
     @Step("Эндпоинт для валидации ответа с помощью Resource")
     public void validateResponseFromResources(TestCaseRunner runner, HttpStatus status, String pathToResource) {
-        runner.$(http().client(yellowDuckService)
-                .receive()
-                .response(status)
-                .message()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(new ClassPathResource(pathToResource))
-        );
+        validationResponseFromResources(runner, yellowDuckService, status, pathToResource);
     }
 
     @Step("Эндпоинт для валидации Json")
     public void validateResponseJsonPath(TestCaseRunner runner,
                                          JsonPathMessageValidationContext.Builder body) {
-        runner.$(
-                http()
-                        .client(yellowDuckService)
-                        .receive()
-                        .response(HttpStatus.OK)
-                        .message()
-                        .type(MessageType.JSON)
-                        .validate(body));
+        validationResponseJsonPath(runner, yellowDuckService, body);
     }
 
     @Step("Эндпоинт для метода Create")
     public void createDuck(TestCaseRunner runner, Object body) {
-        runner.$(http().client(yellowDuckService)
-                .send()
-                .post("/api/duck/create")
-                .message()
-                .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .body(new ObjectMappingPayloadBuilder(body, new ObjectMapper())));
+        sendPostRequestPayload(runner, yellowDuckService, "/api/duck/create", body);
     }
 
     @Step("Эндпоинт для создания утки с четным id")
@@ -233,10 +175,7 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
 
     @Step("Эндпоинт для метода Delete")
     public void duckDelete(TestCaseRunner runner, String id) {
-        runner.$(http().client(yellowDuckService)
-                .send()
-                .delete("/api/duck/delete")
-                .queryParam("id", id));
+        sendDeleteRequest(runner, yellowDuckService, "/api/duck/delete", "id", id);
     }
 
     @Step("Эндпоинт для метода GetAllIds")
@@ -247,15 +186,10 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
     }
 
     @Step("Эндпоинт для метода Update")
-    public void duckUpdate(TestCaseRunner runner, String id, String color, double height, String material, String sound) {
-        runner.$(http().client(yellowDuckService)
-                .send()
-                .put("/api/duck/update")
-                .queryParam("color", color)
-                .queryParam("height", String.valueOf(height))
-                .queryParam("id", id)
-                .queryParam("material", material)
-                .queryParam("sound", sound));
+    public void duckUpdate(TestCaseRunner runner, String id, String color,
+                           double height, String material, String sound) {
+        sendPutRequest(runner, yellowDuckService, "/api/duck/update?color=" + color +
+                "&height=" + height + "&id=" + id + "&material=" + material + "&sound=" + sound);
     }
 
     @Step("Эндпоинт для получения id утки после создания через api")
