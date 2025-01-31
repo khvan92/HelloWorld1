@@ -6,9 +6,13 @@ import autotests.payloads.WingState;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.annotations.CitrusTest;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Test;
 
+@Epic("Тесты на duck-controller")
+@Feature("Эндпоинт /api/duck/create")
 public class ApiDuckCreateTest extends DuckActionsClient {
 
     @Test(description = "Проверка создания утки с material = rubber")

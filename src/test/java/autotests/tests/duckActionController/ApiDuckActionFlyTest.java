@@ -6,25 +6,36 @@ import autotests.payloads.WingState;
 import com.consol.citrus.TestCaseRunner;
 import com.consol.citrus.annotations.CitrusResource;
 import com.consol.citrus.annotations.CitrusTest;
+import io.qameta.allure.Epic;
+import io.qameta.allure.Feature;
 import org.springframework.http.HttpStatus;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Test;
 
-import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
-
+@Epic("Тесты на duck-action-controller")
+@Feature("Эндпоинт /api/duck/action/fly")
 public class ApiDuckActionFlyTest extends DuckActionsClient {
 
     @Test(description = "Проверка action fly утки с активными крыльями")
     @CitrusTest
     public void flyWithActiveWings(@Optional @CitrusResource TestCaseRunner runner) {
-        Duck duckRubber = new Duck().color("yellow").height(0.15).material("rubber").sound("quack").wingsState(WingState.ACTIVE);
+        Duck duckRubber = new Duck()
+                .color("yellow")
+                .height(0.15)
+                .material("rubber")
+                .sound("quack")
+                .wingsState(WingState.ACTIVE);
+
         deleteDuckFinally(runner);
+
 //        createDuck(runner, duckRubber);
 //        getNewDuckId(runner);
+
         createDuckByDb(runner, "897976", duckRubber);
         validateDuckInDb(runner, "${duckId}", duckRubber);
         duckFly(runner, "${duckId}");
-        validateResponse(runner, HttpStatus.OK, "{\n" + "  \"message\": \"I'm flying\"\n" + "}");
+        validateResponse(runner, HttpStatus.OK,
+                "{\n" + "  \"message\": \"I'm flying\"\n" + "}");
     }
 
     @Test(description = "Проверка action fly утки со связанными крыльями")
