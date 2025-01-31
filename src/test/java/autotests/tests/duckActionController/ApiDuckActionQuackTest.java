@@ -1,6 +1,7 @@
 package autotests.tests.duckActionController;
 
 import autotests.clients.DuckActionsClient;
+import autotests.payloads.Duck;
 import autotests.payloads.QuackResponse;
 import autotests.payloads.WingState;
 import com.consol.citrus.TestCaseRunner;
@@ -17,7 +18,20 @@ public class ApiDuckActionQuackTest extends DuckActionsClient {
     public void quackWithOddId(@Optional @CitrusResource TestCaseRunner runner) {
         QuackResponse quackResponse = new QuackResponse().sound("quack");
 
-        createDuckWithOddId(runner, "yellow", 0.15, "wood", "quack", WingState.ACTIVE);
+        Duck duckRubber = new Duck()
+                .color("yellow")
+                .height(0.15)
+                .material("rubber")
+                .sound("quack")
+                .wingsState(WingState.ACTIVE);
+
+        deleteDuckFinally(runner);
+
+//        createDuckWithOddId(runner, "yellow", 0.15, "wood", "quack", WingState.ACTIVE);
+
+        createDuckByDb(runner, "576555", duckRubber);
+        validateDuckInDb(runner, "${duckId}", duckRubber);
+
         duckQuack(runner, "${duckId}", 1, 1);
         validateResponse(runner, HttpStatus.OK, quackResponse);
     }
@@ -27,7 +41,20 @@ public class ApiDuckActionQuackTest extends DuckActionsClient {
     public void quackWithEvenId(@Optional @CitrusResource TestCaseRunner runner) {
         QuackResponse quackResponse = new QuackResponse().sound("quack");
 
-        createDuckWithEvenId(runner, "yellow", 0.15, "rubber", "quack", WingState.ACTIVE);
+        Duck duckRubber = new Duck()
+                .color("yellow")
+                .height(0.15)
+                .material("rubber")
+                .sound("quack")
+                .wingsState(WingState.ACTIVE);
+
+        deleteDuckFinally(runner);
+
+//        createDuckWithEvenId(runner, "yellow", 0.15, "rubber", "quack", WingState.ACTIVE);
+
+        createDuckByDb(runner, "576556", duckRubber);
+        validateDuckInDb(runner, "${duckId}", duckRubber);
+
         duckQuack(runner, "${duckId}", 1, 1);
         validateResponse(runner, HttpStatus.OK, quackResponse);
     }

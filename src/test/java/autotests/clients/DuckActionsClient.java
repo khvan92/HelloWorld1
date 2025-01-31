@@ -15,10 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 import org.springframework.test.context.ContextConfiguration;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.consol.citrus.actions.ExecuteSQLAction.Builder.sql;
+import static com.consol.citrus.actions.ExecuteSQLQueryAction.Builder.query;
+import static com.consol.citrus.container.FinallySequence.Builder.doFinally;
 import static com.consol.citrus.dsl.MessageSupport.MessageBodySupport.fromBody;
 import static com.consol.citrus.http.actions.HttpActionBuilder.http;
 import static com.consol.citrus.validation.json.JsonPathMessageValidationContext.Builder.jsonPath;
@@ -28,6 +32,67 @@ public class DuckActionsClient extends TestNGCitrusSpringSupport {
 
     @Autowired
     protected HttpClient yellowDuckService;
+
+    @Autowired
+    protected SingleConnectionDataSource testDb;
+
+    public void dataBaseUpdate(TestCaseRunner runner, String sql) {
+        runner.$(sql(testDb)
+                .statement(sql));
+    }
+
+    public void createDuckByDb(TestCaseRunner runner, String id, Duck duck) {
+        runner.variable("duckId",  id);
+        runner.variable("color",  duck.color());
+        runner.variable("height",  duck.height());
+        runner.variable("material",  duck.material());
+        runner.variable("sound",  duck.sound());
+        runner.variable("wings_state",  duck.wingsState());
+
+        dataBaseUpdate(runner, "insert into DUCK (id, color, height, material, sound, wings_state) " +
+                "values (${duckId}, '${color}', ${height}, '${material}', '${sound}', '${wings_state}');");
+    }
+
+    public void deleteDuckByDb(TestCaseRunner runner, String id) {
+        runner.variable("duckId", id);
+        dataBaseUpdate(runner, "delete from DUCK where id = ${duckId};");
+    }
+
+    public void deleteDuckFinally(TestCaseRunner runner) {
+        runner.$(doFinally().actions(context->
+        dataBaseUpdate(runner, "delete from DUCK where id = ${duckId};")
+    ));
+    }
+
+    public void updateDuckByDb(TestCaseRunner runner, String id, Duck duck) {
+        runner.variable("duckId",  id);
+        runner.variable("color",  duck.color());
+        runner.variable("height",  duck.height());
+        runner.variable("material",  duck.material());
+        runner.variable("sound",  duck.sound());
+        runner.variable("wings_state",  duck.wingsState());
+
+        dataBaseUpdate(runner, "update DUCK set color = '${color}', height = ${height}, material = '${material}', sound = '${sound}', wings_state = '${wings_state}' "
+                + "where id = ${duckId};");
+    }
+
+    public void validateDuckInDb(TestCaseRunner runner, String id, Duck duck) {
+        runner.$(query(testDb)
+                .statement("select * from duck where id = "+id + ";")
+                .validate("color", duck.color())
+                .validate("height", duck.height().toString())
+                .validate("material", duck.material())
+                .validate("sound", duck.sound())
+                .validate("wings_state", duck.wingsState().toString())
+        );
+    }
+
+    public void validateDeletedDuckInDb(TestCaseRunner runner, String id) {
+        runner.$(query(testDb)
+                .statement("select count(1) as overall_cnt from duck where id = "+id + ";")
+                .validate("overall_cnt", "0" )
+        );
+    }
 
     public void duckSwim(TestCaseRunner runner, String id) {
         runner.$(http().client(yellowDuckService)

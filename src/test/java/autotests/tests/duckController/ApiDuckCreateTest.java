@@ -15,19 +15,29 @@ public class ApiDuckCreateTest extends DuckActionsClient {
     @CitrusTest
     public void createRubberDuckTest(@Optional @CitrusResource TestCaseRunner runner) {
         Duck duckRubber = new Duck().color("yellow").height(0.15).material("rubber").sound("quack").wingsState(WingState.ACTIVE);
+
+        deleteDuckFinally(runner);
+
         createDuck(runner, duckRubber);
         getNewDuckId(runner);
-        duckProperties(runner, "${duckId}");
-        checkAllProperties(runner, "yellow", 0.15, "rubber", "quack", "ACTIVE");
+        validateDuckInDb(runner, "${duckId}", duckRubber);
+
+//        duckProperties(runner, "${duckId}");
+//        checkAllProperties(runner, "yellow", 0.15, "rubber", "quack", "ACTIVE");
     }
 
     @Test(description = "Проверка создания утки с material = wood")
     @CitrusTest
     public void createWoodDuckTest(@Optional @CitrusResource TestCaseRunner runner) {
         Duck duckWood = new Duck().color("yellow").height(0.15).material("wood").sound("quack").wingsState(WingState.ACTIVE);
+
+        deleteDuckFinally(runner);
+
         createDuck(runner, duckWood);
         getNewDuckId(runner);
-        duckProperties(runner, "${duckId}");
-        checkAllProperties(runner, "yellow", 0.15, "wood", "quack", "ACTIVE");
+        validateDuckInDb(runner, "${duckId}", duckWood);
+
+//        duckProperties(runner, "${duckId}");
+//        checkAllProperties(runner, "yellow", 0.15, "wood", "quack", "ACTIVE");
     }
 }
